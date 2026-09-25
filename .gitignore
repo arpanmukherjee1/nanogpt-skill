@@ -1,0 +1,10 @@
+# Your NanoGPT API key: never commit it
+nanogpt.key
+*.key
+
+# Packaged skill zips contain your key
+*.zip
+
+# OS noise
+.DS_Store
+Thumbs.db
