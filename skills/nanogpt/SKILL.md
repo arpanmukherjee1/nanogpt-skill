@@ -9,11 +9,13 @@ Every generation call spends the user's real balance. Treat each paid call as sp
 
 ## 1. The credential: `nanogpt.key`
 
-The key lives in `nanogpt.key`, in the same directory as this SKILL.md.
+The key lives in a file named `nanogpt.key`. Scripts look for it in two places, in this order:
+1. The directory containing this SKILL.md (claude.ai uploads and manual installs).
+2. `~/.config/nanogpt/nanogpt.key` (Claude Code plugin installs, whose skill directory is replaced on every update).
 
-- **Never read it.** No `cat`, `head`, `tail`, `less`, `view`, `grep`, `sed`, `strings`, `xxd`, `base64`, no `python -c` that prints it, no recursive search/listing-with-contents of the skill directory unless the key file is excluded. Never copy, move, rename, archive or upload it, and never place it under the outputs directory.
+- **Never read it.** No `cat`, `head`, `tail`, `less`, `view`, `grep`, `sed`, `strings`, `xxd`, `base64`, no `python -c` that prints it, no recursive search/listing-with-contents of the skill directory or `~/.config/nanogpt/` unless the key file is excluded. Never copy, move, rename, archive or upload it, and never place it under the outputs directory.
 - **Only scripts use it.** A script you write opens the file, holds the value in memory, and puts it into the HTTP auth header. Nothing else. The script must never print, log, return, interpolate into a URL/filename/error, or pass it on the command line or through an environment variable you set in a visible command.
-- If the script finds the file missing, empty or still containing the placeholder, it exits with a message that does not contain the key; tell the user to fill in `nanogpt.key`. Never ask the user to paste the key into the chat, and never work around a missing key.
+- If the script finds no usable key file (missing, unreadable, empty or still the placeholder in both places), it exits with a message that does not contain the key. Tell the user to save their key as `~/.config/nanogpt/nanogpt.key`, or on claude.ai to put `nanogpt.key` in the skill folder and upload the skill again. Never ask the user to paste the key into the chat, and never work around a missing key.
 - The loader pattern and all scripting rules are in `references/scripting.md`. Read it before writing the first script in a conversation.
 
 ## 2. Mandatory pre-flight - before ANY paid call

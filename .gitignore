@@ -5,6 +5,9 @@ nanogpt.key
 # Packaged skill zips contain your key
 *.zip
 
+# Scratch folder the skill creates in Claude Code
+nanogpt-work/
+
 # OS noise
 .DS_Store
 Thumbs.db

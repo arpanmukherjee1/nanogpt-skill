@@ -4,14 +4,14 @@ There are no bundled scripts. For every stage, write a small, purpose-built Pyth
 
 ## 1. Where and how
 
-- Write scripts into the working directory (e.g. `/home/claude/ng_<stage>.py`) with the file-creation tool, then run them with `python3`.
+- Write scripts named `ng_<stage>.py` into the working directory with the file-creation tool, then run them with `python3` (`python` on Windows). The working directory is `/home/claude/` on claude.ai; elsewhere, use a `nanogpt-work/` folder in the current directory.
 - One script per stage (or per small group of tightly coupled stages). This keeps user checkpoints possible between stages.
 - Scripts print compact, human-readable summaries: model used, job ID, status, cost, saved file paths. Never dump large JSON into the conversation - save it to a file and print a filtered view.
-- Final deliverables go to `/mnt/user-data/outputs/` and are presented to the user; intermediates stay in the working directory.
+- Final deliverables go to the outputs directory and are presented to the user; intermediates stay in the working directory. The outputs directory is `/mnt/user-data/outputs/` on claude.ai; elsewhere, it is the current directory unless the user names another.
 
 ## 2. Key rules (non-negotiable)
 
-- The key file is `nanogpt.key` in the directory that contains this skill's `SKILL.md`. Use that directory's absolute path (known from where the skill was loaded) in the script.
+- The key file is `nanogpt.key`, looked up first in the directory that contains this skill's `SKILL.md`, then at `~/.config/nanogpt/nanogpt.key`. Put the skill directory's absolute path (known from where the skill was loaded) in the script; the template checks both places.
 - Only the script opens the file. Never read, print, search, copy or move it with any other tool or command.
 - Load it inside a function, use it only to build the auth header, and never let it reach stdout, logs, exception text, filenames, URLs, command-line arguments or files you write.
 - Never print request headers. When reporting an error, print the HTTP status and the response body only.
@@ -25,19 +25,23 @@ Copy this into each script and adapt only the stage-specific part.
 import base64, json, mimetypes, os, sys, time, urllib.error, urllib.request
 
 SKILL_DIR = "/ABSOLUTE/PATH/TO/SKILL/DIR"      # directory containing SKILL.md
-KEY_PATH = os.path.join(SKILL_DIR, "nanogpt.key")
+WORK_DIR = "/ABSOLUTE/PATH/TO/WORKING/DIR"     # see section 1
+KEY_PATHS = [os.path.join(SKILL_DIR, "nanogpt.key"),
+             os.path.join(os.path.expanduser("~"), ".config", "nanogpt", "nanogpt.key")]
 PLACEHOLDER = "REPLACE_WITH_YOUR_NANOGPT_API_KEY"
 BASE = "https://api.nano-gpt.com"
 
 def _auth_header():
-    try:
-        with open(KEY_PATH, encoding="utf-8") as f:
-            k = f.read().strip()
-    except OSError:
-        sys.exit("ERROR: nanogpt.key not found next to SKILL.md.")
-    if not k or k == PLACEHOLDER:
-        sys.exit("ERROR: nanogpt.key is empty or still the placeholder. The user must fill it in.")
-    return {"x-api-key": k}
+    for path in KEY_PATHS:                       # first usable file wins
+        try:
+            with open(path, encoding="utf-8-sig") as f:
+                k = f.read().strip()
+        except (OSError, UnicodeError):
+            continue
+        if k and k != PLACEHOLDER:
+            return {"x-api-key": k}
+    sys.exit("ERROR: no usable nanogpt.key (missing, unreadable, empty or placeholder). Checked: "
+             + ", ".join(KEY_PATHS) + ". The user must save their key in one of these files.")
 
 def call(method, path, body=None, auth=True, headers=None, timeout=300, raw=False, form=None):
     """Return (status, parsed_json_or_bytes, content_type). Never prints headers."""
@@ -109,7 +113,7 @@ Multipart uploads (only where an endpoint requires a file upload): build the bod
 
 ```python
 st, cat, _ = call("GET", "/api/v1/<catalog>?detailed=true", auth=False)
-json.dump(cat, open("/home/claude/catalog_<domain>.json", "w"))
+json.dump(cat, open(os.path.join(WORK_DIR, "catalog_<domain>.json"), "w"))
 rows = [m for m in cat["data"] if <capability / modality filter>]
 for m in sorted(rows, key=<price sort key>)[:15]:
     print(m["id"], "|", m.get("name"), "|", json.dumps(m.get("pricing"))[:160], "|", (m.get("description") or "")[:140])
@@ -141,7 +145,7 @@ if st == 402:
 
 ## 7. Manifest
 
-Keep `/home/claude/ng_manifest.json`:
+Keep `ng_manifest.json` in the working directory:
 
 ```json
 {"pipeline": "...", "approved_total_usd": [low, high],

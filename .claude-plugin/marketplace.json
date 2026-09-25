@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "arpan-skills",
+  "description": "Claude skills by Arpan Mukherjee. Each plugin is a separate set of skills, so you install only the ones you need.",
+  "owner": {
+    "name": "Arpan Mukherjee",
+    "url": "https://github.com/arpanmukherjee1"
+  },
+  "plugins": [
+    {
+      "name": "nanogpt",
+      "displayName": "NanoGPT",
+      "description": "Plan, cost-estimate and run work on your NanoGPT account (chat, image, video, audio, 3D, embeddings, web tools), with a cost pre-flight before any paid call.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/nanogpt"],
+      "author": {
+        "name": "Arpan Mukherjee",
+        "url": "https://github.com/arpanmukherjee1"
+      },
+      "homepage": "https://github.com/arpanmukherjee1/skills",
+      "repository": "https://github.com/arpanmukherjee1/skills",
+      "license": "MIT",
+      "category": "ai",
+      "keywords": ["nanogpt", "image-generation", "video-generation", "text-to-speech", "transcription", "3d", "cost-estimation"]
+    }
+  ]
+}
